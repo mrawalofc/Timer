@@ -1,0 +1,824 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChronoFlow | Interactive Timing Show</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00f0ff;
+            --secondary: #ff006e;
+            --accent: #fb5607;
+            --dark: #0a0a0f;
+            --panel: #151520;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark);
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Animated Background */
+        .bg-grid {
+            background-image: 
+                linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+        }
+        
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+        
+        .glow-text {
+            text-shadow: 0 0 20px rgba(0, 240, 255, 0.5), 0 0 40px rgba(0, 240, 255, 0.3);
+        }
+        
+        .glow-box {
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.05);
+        }
+        
+        /* Progress Ring */
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.1s linear;
+            filter: drop-shadow(0 0 10px var(--primary));
+        }
+        
+        /* Tab Animation */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Button Effects */
+        .btn-glow {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-glow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(0, 240, 255, 0.3);
+        }
+        
+        .btn-glow::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-glow:hover::before {
+            left: 100%;
+        }
+        
+        /* Laps */
+        .lap-item {
+            animation: slideIn 0.3s ease-out;
+            border-left: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .lap-item:hover {
+            border-left-color: var(--primary);
+            background: rgba(0, 240, 255, 0.05);
+            transform: translateX(10px);
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        /* World Clock Cards */
+        .clock-card {
+            background: linear-gradient(135deg, rgba(21, 21, 32, 0.8), rgba(30, 30, 45, 0.8));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .clock-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--dark);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        
+        /* Pulse Animation */
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Glitch Effect */
+        .glitch {
+            position: relative;
+        }
+        
+        .glitch::before,
+        .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .glitch::before {
+            animation: glitch-1 2s infinite linear alternate-reverse;
+            color: var(--secondary);
+            z-index: -1;
+        }
+        
+        .glitch::after {
+            animation: glitch-2 3s infinite linear alternate-reverse;
+            color: var(--primary);
+            z-index: -2;
+        }
+        
+        @keyframes glitch-1 {
+            0%, 100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+            20% { clip-path: inset(20% 0 30% 0); transform: translate(-2px, 2px); }
+            40% { clip-path: inset(50% 0 20% 0); transform: translate(2px, -2px); }
+            60% { clip-path: inset(10% 0 60% 0); transform: translate(-2px, 0); }
+            80% { clip-path: inset(80% 0 5% 0); transform: translate(2px, 2px); }
+        }
+        
+        @keyframes glitch-2 {
+            0%, 100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+            20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -2px); }
+            40% { clip-path: inset(30% 0 40% 0); transform: translate(-2px, 2px); }
+            60% { clip-path: inset(10% 0 80% 0); transform: translate(2px, 0); }
+            80% { clip-path: inset(40% 0 30% 0); transform: translate(-2px, -2px); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-grid relative">
+    <!-- Background Effects -->
+    <div class="fixed inset-0 pointer-events-none">
+        <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-transparent to-black/50"></div>
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+    </div>
+
+    <div class="relative z-10 container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1 class="text-6xl md:text-8xl font-black mb-4 tracking-tighter glitch" data-text="CHRONOFLOW">
+                CHRONOFLOW
+            </h1>
+            <p class="text-cyan-400 text-lg tracking-widest uppercase opacity-80">Precision Timing Instruments</p>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="flex justify-center mb-12 gap-2 flex-wrap">
+            <button onclick="switchTab('clock')" class="tab-btn active px-8 py-3 rounded-full bg-white/5 border border-white/10 hover:border-cyan-400 hover:bg-cyan-400/10 transition-all duration-300 font-semibold tracking-wide" data-tab="clock">
+                🕐 WORLD CLOCK
+            </button>
+            <button onclick="switchTab('stopwatch')" class="tab-btn px-8 py-3 rounded-full bg-white/5 border border-white/10 hover:border-pink-500 hover:bg-pink-500/10 transition-all duration-300 font-semibold tracking-wide" data-tab="stopwatch">
+                ⏱️ STOPWATCH
+            </button>
+            <button onclick="switchTab('timer')" class="tab-btn px-8 py-3 rounded-full bg-white/5 border border-white/10 hover:border-orange-500 hover:bg-orange-500/10 transition-all duration-300 font-semibold tracking-wide" data-tab="timer">
+                ⏲️ TIMER
+            </button>
+            <button onclick="switchTab('pomodoro')" class="tab-btn px-8 py-3 rounded-full bg-white/5 border border-white/10 hover:border-green-400 hover:bg-green-400/10 transition-all duration-300 font-semibold tracking-wide" data-tab="pomodoro">
+                🍅 POMODORO
+            </button>
+        </nav>
+
+        <!-- World Clock Section -->
+        <div id="clock" class="tab-content active">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Local Time -->
+                <div class="clock-card rounded-2xl p-8 glow-box">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-cyan-400 text-sm font-bold tracking-wider">LOCAL TIME</span>
+                        <div class="w-2 h-2 rounded-full bg-cyan-400 pulse"></div>
+                    </div>
+                    <div class="text-5xl font-bold mono mb-2" id="local-time">00:00:00</div>
+                    <div class="text-gray-400 text-sm" id="local-date">Loading...</div>
+                    <div class="mt-4 text-xs text-cyan-400/60 uppercase tracking-widest" id="local-timezone">Detecting...</div>
+                </div>
+
+                <!-- New York -->
+                <div class="clock-card rounded-2xl p-8 glow-box">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-pink-500 text-sm font-bold tracking-wider">NEW YORK</span>
+                        <span class="text-xs bg-pink-500/20 text-pink-400 px-2 py-1 rounded">EST/EDT</span>
+                    </div>
+                    <div class="text-5xl font-bold mono mb-2" id="ny-time">00:00:00</div>
+                    <div class="text-gray-400 text-sm" id="ny-date">--</div>
+                    <div class="mt-4 flex items-center gap-2">
+                        <div class="w-16 h-1 bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-pink-500 transition-all duration-1000" id="ny-progress" style="width: 0%"></div>
+                        </div>
+                        <span class="text-xs text-gray-500">Day Progress</span>
+                    </div>
+                </div>
+
+                <!-- London -->
+                <div class="clock-card rounded-2xl p-8 glow-box">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-orange-500 text-sm font-bold tracking-wider">LONDON</span>
+                        <span class="text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded">GMT/BST</span>
+                    </div>
+                    <div class="text-5xl font-bold mono mb-2" id="london-time">00:00:00</div>
+                    <div class="text-gray-400 text-sm" id="london-date">--</div>
+                    <div class="mt-4 flex items-center gap-2">
+                        <div class="w-16 h-1 bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-orange-500 transition-all duration-1000" id="london-progress" style="width: 0%"></div>
+                        </div>
+                        <span class="text-xs text-gray-500">Day Progress</span>
+                    </div>
+                </div>
+
+                <!-- Tokyo -->
+                <div class="clock-card rounded-2xl p-8 glow-box">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-purple-500 text-sm font-bold tracking-wider">TOKYO</span>
+                        <span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">JST</span>
+                    </div>
+                    <div class="text-5xl font-bold mono mb-2" id="tokyo-time">00:00:00</div>
+                    <div class="text-gray-400 text-sm" id="tokyo-date">--</div>
+                    <div class="mt-4 flex items-center gap-2">
+                        <div class="w-16 h-1 bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-purple-500 transition-all duration-1000" id="tokyo-progress" style="width: 0%"></div>
+                        </div>
+                        <span class="text-xs text-gray-500">Day Progress</span>
+                    </div>
+                </div>
+
+                <!-- Sydney -->
+                <div class="clock-card rounded-2xl p-8 glow-box">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-green-400 text-sm font-bold tracking-wider">SYDNEY</span>
+                        <span class="text-xs bg-green-400/20 text-green-400 px-2 py-1 rounded">AEST</span>
+                    </div>
+                    <div class="text-5xl font-bold mono mb-2" id="sydney-time">00:00:00</div>
+                    <div class="text-gray-400 text-sm" id="sydney-date">--</div>
+                    <div class="mt-4 flex items-center gap-2">
+                        <div class="w-16 h-1 bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-green-400 transition-all duration-1000" id="sydney-progress" style="width: 0%"></div>
+                        </div>
+                        <span class="text-xs text-gray-500">Day Progress</span>
+                    </div>
+                </div>
+
+                <!-- UTC -->
+                <div class="clock-card rounded-2xl p-8 glow-box border-cyan-400/30">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-cyan-400 text-sm font-bold tracking-wider">UTC / GMT</span>
+                        <span class="text-xs bg-cyan-400/20 text-cyan-400 px-2 py-1 rounded">UNIVERSAL</span>
+                    </div>
+                    <div class="text-5xl font-bold mono mb-2" id="utc-time">00:00:00</div>
+                    <div class="text-gray-400 text-sm" id="utc-date">--</div>
+                    <div class="mt-4 text-xs text-cyan-400/60 uppercase tracking-widest">Coordinated Universal Time</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stopwatch Section -->
+        <div id="stopwatch" class="tab-content">
+            <div class="max-w-4xl mx-auto">
+                <!-- Main Display -->
+                <div class="bg-gradient-to-br from-gray-900 to-black rounded-3xl p-12 mb-8 border border-white/10 glow-box text-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--primary)_0%,_transparent_70%)] opacity-10"></div>
+                    <div class="relative z-10">
+                        <div class="text-8xl md:text-9xl font-bold mono tracking-tighter glow-text mb-4" id="sw-display">00:00.00</div>
+                        <div class="flex justify-center gap-8 text-sm text-gray-500 uppercase tracking-widest">
+                            <div>Minutes</div>
+                            <div>Seconds</div>
+                            <div>Centiseconds</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="flex justify-center gap-4 mb-8">
+                    <button onclick="startStopwatch()" id="sw-start" class="btn-glow px-12 py-4 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-full text-lg tracking-wide">
+                        START
+                    </button>
+                    <button onclick="pauseStopwatch()" id="sw-pause" class="btn-glow px-12 py-4 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-full text-lg tracking-wide hidden">
+                        PAUSE
+                    </button>
+                    <button onclick="lapStopwatch()" id="sw-lap" class="btn-glow px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/20 font-bold rounded-full text-lg tracking-wide disabled:opacity-50" disabled>
+                        LAP
+                    </button>
+                    <button onclick="resetStopwatch()" class="btn-glow px-8 py-4 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-400 font-bold rounded-full text-lg tracking-wide">
+                        RESET
+                    </button>
+                </div>
+
+                <!-- Laps -->
+                <div class="bg-black/30 rounded-2xl border border-white/5 overflow-hidden max-h-96 overflow-y-auto" id="sw-laps">
+                    <div class="p-4 border-b border-white/5 text-center text-gray-500 text-sm uppercase tracking-widest">
+                        No laps recorded
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timer Section -->
+        <div id="timer" class="tab-content">
+            <div class="max-w-2xl mx-auto">
+                <!-- Circular Progress -->
+                <div class="relative w-80 h-80 mx-auto mb-8">
+                    <svg class="w-full h-full progress-ring" viewBox="0 0 120 120">
+                        <circle cx="60" cy="60" r="54" fill="none" stroke="#1a1a2e" stroke-width="8"></circle>
+                        <circle id="timer-circle" cx="60" cy="60" r="54" fill="none" stroke="url(#timerGradient)" stroke-width="8" stroke-linecap="round" stroke-dasharray="339.292" stroke-dashoffset="0" class="progress-ring-circle"></circle>
+                        <defs>
+                            <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#00f0ff" />
+                                <stop offset="100%" stop-color="#ff006e" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center flex-col">
+                        <div class="text-6xl font-bold mono glow-text" id="timer-display">00:00</div>
+                        <div class="text-gray-500 text-sm mt-2 uppercase tracking-widest">Remaining</div>
+                    </div>
+                </div>
+
+                <!-- Input (only when not running) -->
+                <div id="timer-input" class="flex justify-center gap-4 mb-8">
+                    <div class="flex flex-col items-center">
+                        <input type="number" id="timer-min" min="0" max="99" value="5" class="w-20 h-20 bg-white/5 border border-white/10 rounded-2xl text-center text-3xl font-bold focus:border-cyan-400 focus:outline-none transition-colors">
+                        <label class="text-xs text-gray-500 mt-2 uppercase">Min</label>
+                    </div>
+                    <div class="text-4xl font-bold self-center pb-6">:</div>
+                    <div class="flex flex-col items-center">
+                        <input type="number" id="timer-sec" min="0" max="59" value="0" class="w-20 h-20 bg-white/5 border border-white/10 rounded-2xl text-center text-3xl font-bold focus:border-cyan-400 focus:outline-none transition-colors">
+                        <label class="text-xs text-gray-500 mt-2 uppercase">Sec</label>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="flex justify-center gap-4">
+                    <button onclick="startTimer()" id="tm-start" class="btn-glow px-12 py-4 bg-orange-500 hover:bg-orange-400 text-black font-bold rounded-full text-lg tracking-wide">
+                        START
+                    </button>
+                    <button onclick="pauseTimer()" id="tm-pause" class="btn-glow px-12 py-4 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-full text-lg tracking-wide hidden">
+                        PAUSE
+                    </button>
+                    <button onclick="resetTimer()" class="btn-glow px-10 py-4 bg-white/10 hover:bg-white/20 border border-white/20 font-bold rounded-full text-lg tracking-wide">
+                        RESET
+                    </button>
+                </div>
+
+                <!-- Quick Presets -->
+                <div class="mt-8 flex justify-center gap-3 flex-wrap">
+                    <button onclick="setTimer(1, 0)" class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-sm transition-colors">1 min</button>
+                    <button onclick="setTimer(5, 0)" class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-sm transition-colors">5 min</button>
+                    <button onclick="setTimer(10, 0)" class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-sm transition-colors">10 min</button>
+                    <button onclick="setTimer(15, 0)" class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-sm transition-colors">15 min</button>
+                    <button onclick="setTimer(25, 0)" class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-sm transition-colors">25 min</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pomodoro Section -->
+        <div id="pomodoro" class="tab-content">
+            <div class="max-w-3xl mx-auto">
+                <!-- Mode Switcher -->
+                <div class="flex justify-center gap-2 mb-8 p-1 bg-white/5 rounded-full w-fit mx-auto">
+                    <button onclick="setPomodoroMode('work')" id="pm-work" class="px-6 py-2 rounded-full bg-green-500 text-black font-bold text-sm transition-all">Work</button>
+                    <button onclick="setPomodoroMode('short')" id="pm-short" class="px-6 py-2 rounded-full text-gray-400 hover:text-white font-bold text-sm transition-all">Short Break</button>
+                    <button onclick="setPomodoroMode('long')" id="pm-long" class="px-6 py-2 rounded-full text-gray-400 hover:text-white font-bold text-sm transition-all">Long Break</button>
+                </div>
+
+                <!-- Display -->
+                <div class="bg-gradient-to-br from-green-900/20 to-black rounded-3xl p-12 mb-8 border border-green-500/20 glow-box text-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_#22c55e_0%,_transparent_70%)] opacity-5"></div>
+                    <div class="relative z-10">
+                        <div class="text-8xl md:text-9xl font-bold mono tracking-tighter text-green-400 glow-text mb-4" id="pm-display">25:00</div>
+                        <div class="text-green-400/60 text-sm uppercase tracking-widest" id="pm-status">Ready to Focus</div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full h-2 bg-white/10 rounded-full mb-8 overflow-hidden">
+                    <div id="pm-progress" class="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-1000" style="width: 100%"></div>
+                </div>
+
+                <!-- Controls -->
+                <div class="flex justify-center gap-4">
+                    <button onclick="startPomodoro()" id="pm-start" class="btn-glow px-12 py-4 bg-green-500 hover:bg-green-400 text-black font-bold rounded-full text-lg tracking-wide">
+                        START FOCUS
+                    </button>
+                    <button onclick="pausePomodoro()" id="pm-pause" class="btn-glow px-12 py-4 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-full text-lg tracking-wide hidden">
+                        PAUSE
+                    </button>
+                    <button onclick="resetPomodoro()" class="btn-glow px-10 py-4 bg-white/10 hover:bg-white/20 border border-white/20 font-bold rounded-full text-lg tracking-wide">
+                        RESET
+                    </button>
+                </div>
+
+                <!-- Stats -->
+                <div class="mt-12 grid grid-cols-3 gap-4 text-center">
+                    <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
+                        <div class="text-3xl font-bold text-green-400 mb-1" id="pm-completed">0</div>
+                        <div class="text-xs text-gray-500 uppercase tracking-wider">Sessions</div>
+                    </div>
+                    <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
+                        <div class="text-3xl font-bold text-cyan-400 mb-1" id="pm-focus-time">0h</div>
+                        <div class="text-xs text-gray-500 uppercase tracking-wider">Focus Time</div>
+                    </div>
+                    <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
+                        <div class="text-3xl font-bold text-purple-400 mb-1" id="pm-streak">0</div>
+                        <div class="text-xs text-gray-500 uppercase tracking-wider">Streak</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-16 text-center text-gray-600 text-sm">
+            <p>ChronoFlow Timing System • <span class="text-cyan-400">v2.0</span></p>
+        </footer>
+    </div>
+
+    <script>
+        // Tab Switching
+        function switchTab(tabName) {
+            // Update buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                if (btn.dataset.tab === tabName) {
+                    btn.classList.add('active', 'bg-white/10', 'border-cyan-400');
+                    btn.classList.remove('bg-white/5', 'border-white/10');
+                } else {
+                    btn.classList.remove('active', 'bg-white/10', 'border-cyan-400');
+                    btn.classList.add('bg-white/5', 'border-white/10');
+                }
+            });
+
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // Initialize first tab
+        switchTab('clock');
+
+        // World Clock
+        function updateClocks() {
+            const now = new Date();
+            
+            // Local
+            document.getElementById('local-time').textContent = now.toLocaleTimeString('en-US', { hour12: false });
+            document.getElementById('local-date').textContent = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('local-timezone').textContent = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+            // Helper for other cities
+            const updateCity = (id, timezone) => {
+                const options = { timeZone: timezone, hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
+                const dateOptions = { timeZone: timezone, weekday: 'short', month: 'short', day: 'numeric' };
+                const cityTime = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+                
+                document.getElementById(`${id}-time`).textContent = cityTime.toLocaleTimeString('en-US', options);
+                document.getElementById(`${id}-date`).textContent = cityTime.toLocaleDateString('en-US', dateOptions);
+                
+                // Day progress
+                const hours = cityTime.getHours();
+                const minutes = cityTime.getMinutes();
+                const progress = ((hours * 60 + minutes) / 1440) * 100;
+                document.getElementById(`${id}-progress`).style.width = `${progress}%`;
+            };
+
+            updateCity('ny', 'America/New_York');
+            updateCity('london', 'Europe/London');
+            updateCity('tokyo', 'Asia/Tokyo');
+            updateCity('sydney', 'Australia/Sydney');
+            
+            // UTC
+            document.getElementById('utc-time').textContent = now.toUTCString().split(' ')[4];
+            document.getElementById('utc-date').textContent = now.toUTCString().split(' ').slice(0, 4).join(' ');
+        }
+
+        setInterval(updateClocks, 1000);
+        updateClocks();
+
+        // Stopwatch
+        let swInterval;
+        let swStartTime;
+        let swElapsed = 0;
+        let swRunning = false;
+        let swLaps = [];
+
+        function formatTime(ms) {
+            const minutes = Math.floor(ms / 60000);
+            const seconds = Math.floor((ms % 60000) / 1000);
+            const centis = Math.floor((ms % 1000) / 10);
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centis.toString().padStart(2, '0')}`;
+        }
+
+        function startStopwatch() {
+            if (!swRunning) {
+                swStartTime = Date.now() - swElapsed;
+                swInterval = setInterval(() => {
+                    swElapsed = Date.now() - swStartTime;
+                    document.getElementById('sw-display').textContent = formatTime(swElapsed);
+                }, 10);
+                swRunning = true;
+                document.getElementById('sw-start').classList.add('hidden');
+                document.getElementById('sw-pause').classList.remove('hidden');
+                document.getElementById('sw-lap').disabled = false;
+            }
+        }
+
+        function pauseStopwatch() {
+            if (swRunning) {
+                clearInterval(swInterval);
+                swRunning = false;
+                document.getElementById('sw-start').classList.remove('hidden');
+                document.getElementById('sw-pause').classList.add('hidden');
+                document.getElementById('sw-start').textContent = 'RESUME';
+            }
+        }
+
+        function lapStopwatch() {
+            if (swRunning) {
+                const lapTime = formatTime(swElapsed);
+                const lapNumber = swLaps.length + 1;
+                swLaps.push({ number: lapNumber, time: lapTime });
+                
+                const lapsContainer = document.getElementById('sw-laps');
+                if (swLaps.length === 1) {
+                    lapsContainer.innerHTML = '';
+                }
+                
+                const lapDiv = document.createElement('div');
+                lapDiv.className = 'lap-item p-4 border-b border-white/5 flex justify-between items-center';
+                lapDiv.innerHTML = `
+                    <span class="text-cyan-400 font-bold">LAP ${lapNumber.toString().padStart(2, '0')}</span>
+                    <span class="mono text-xl font-bold">${lapTime}</span>
+                `;
+                lapsContainer.insertBefore(lapDiv, lapsContainer.firstChild);
+            }
+        }
+
+        function resetStopwatch() {
+            clearInterval(swInterval);
+            swRunning = false;
+            swElapsed = 0;
+            swLaps = [];
+            document.getElementById('sw-display').textContent = '00:00.00';
+            document.getElementById('sw-start').classList.remove('hidden');
+            document.getElementById('sw-pause').classList.add('hidden');
+            document.getElementById('sw-start').textContent = 'START';
+            document.getElementById('sw-lap').disabled = true;
+            document.getElementById('sw-laps').innerHTML = '<div class="p-4 border-b border-white/5 text-center text-gray-500 text-sm uppercase tracking-widest">No laps recorded</div>';
+        }
+
+        // Timer
+        let tmInterval;
+        let tmTotalSeconds = 300;
+        let tmRemaining = 300;
+        let tmRunning = false;
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(tmRemaining / 60);
+            const secs = tmRemaining % 60;
+            document.getElementById('timer-display').textContent = 
+                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            
+            // Update circle
+            const circle = document.getElementById('timer-circle');
+            const circumference = 339.292;
+            const offset = circumference - (tmRemaining / tmTotalSeconds) * circumference;
+            circle.style.strokeDashoffset = offset;
+        }
+
+        function setTimer(min, sec) {
+            if (!tmRunning) {
+                document.getElementById('timer-min').value = min;
+                document.getElementById('timer-sec').value = sec;
+                tmTotalSeconds = min * 60 + sec;
+                tmRemaining = tmTotalSeconds;
+                updateTimerDisplay();
+            }
+        }
+
+        function startTimer() {
+            if (!tmRunning) {
+                if (tmRemaining === tmTotalSeconds) {
+                    tmTotalSeconds = parseInt(document.getElementById('timer-min').value) * 60 + 
+                                    parseInt(document.getElementById('timer-sec').value);
+                    tmRemaining = tmTotalSeconds;
+                }
+                
+                document.getElementById('timer-input').classList.add('opacity-50', 'pointer-events-none');
+                tmRunning = true;
+                document.getElementById('tm-start').classList.add('hidden');
+                document.getElementById('tm-pause').classList.remove('hidden');
+                
+                tmInterval = setInterval(() => {
+                    if (tmRemaining > 0) {
+                        tmRemaining--;
+                        updateTimerDisplay();
+                    } else {
+                        clearInterval(tmInterval);
+                        tmRunning = false;
+                        document.getElementById('tm-start').classList.remove('hidden');
+                        document.getElementById('tm-pause').classList.add('hidden');
+                        document.getElementById('timer-input').classList.remove('opacity-50', 'pointer-events-none');
+                        alert('Timer Complete!');
+                    }
+                }, 1000);
+            }
+        }
+
+        function pauseTimer() {
+            clearInterval(tmInterval);
+            tmRunning = false;
+            document.getElementById('tm-start').classList.remove('hidden');
+            document.getElementById('tm-pause').classList.add('hidden');
+        }
+
+        function resetTimer() {
+            clearInterval(tmInterval);
+            tmRunning = false;
+            tmRemaining = parseInt(document.getElementById('timer-min').value) * 60 + 
+                         parseInt(document.getElementById('timer-sec').value);
+            tmTotalSeconds = tmRemaining;
+            updateTimerDisplay();
+            document.getElementById('tm-start').classList.remove('hidden');
+            document.getElementById('tm-pause').classList.add('hidden');
+            document.getElementById('timer-input').classList.remove('opacity-50', 'pointer-events-none');
+        }
+
+        // Pomodoro
+        let pmInterval;
+        let pmTime = 25 * 60;
+        let pmTotal = 25 * 60;
+        let pmRunning = false;
+        let pmMode = 'work';
+        let pmCompleted = 0;
+        let pmFocusMinutes = 0;
+        let pmStreak = 0;
+
+        const pmModes = {
+            work: { time: 25, color: 'green', label: 'Focus Time' },
+            short: { time: 5, color: 'cyan', label: 'Short Break' },
+            long: { time: 15, color: 'purple', label: 'Long Break' }
+        };
+
+        function setPomodoroMode(mode) {
+            if (!pmRunning) {
+                pmMode = mode;
+                pmTime = pmModes[mode].time * 60;
+                pmTotal = pmTime;
+                updatePomodoroDisplay();
+                
+                // Update UI
+                ['work', 'short', 'long'].forEach(m => {
+                    const btn = document.getElementById(`pm-${m}`);
+                    if (m === mode) {
+                        btn.className = `px-6 py-2 rounded-full bg-${pmModes[mode].color}-500 text-black font-bold text-sm transition-all`;
+                    } else {
+                        btn.className = 'px-6 py-2 rounded-full text-gray-400 hover:text-white font-bold text-sm transition-all';
+                    }
+                });
+                
+                document.getElementById('pm-status').textContent = pmModes[mode].label;
+                document.getElementById('pm-start').textContent = mode === 'work' ? 'START FOCUS' : 'START BREAK';
+                
+                // Update colors
+                const colors = { work: 'green', short: 'cyan', long: 'purple' };
+                const color = colors[mode];
+                document.getElementById('pm-display').className = `text-8xl md:text-9xl font-bold mono tracking-tighter text-${color}-400 glow-text mb-4`;
+                document.getElementById('pm-progress').className = `h-full bg-gradient-to-r from-${color}-400 to-${color}-600 transition-all duration-1000`;
+            }
+        }
+
+        function updatePomodoroDisplay() {
+            const mins = Math.floor(pmTime / 60);
+            const secs = pmTime % 60;
+            document.getElementById('pm-display').textContent = 
+                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            
+            const progress = (pmTime / pmTotal) * 100;
+            document.getElementById('pm-progress').style.width = `${progress}%`;
+        }
+
+        function startPomodoro() {
+            if (!pmRunning) {
+                pmRunning = true;
+                document.getElementById('pm-start').classList.add('hidden');
+                document.getElementById('pm-pause').classList.remove('hidden');
+                document.getElementById('pm-status').textContent = pmMode === 'work' ? 'Focusing...' : 'Resting...';
+                
+                pmInterval = setInterval(() => {
+                    if (pmTime > 0) {
+                        pmTime--;
+                        updatePomodoroDisplay();
+                    } else {
+                        completePomodoro();
+                    }
+                }, 1000);
+            }
+        }
+
+        function pausePomodoro() {
+            clearInterval(pmInterval);
+            pmRunning = false;
+            document.getElementById('pm-start').classList.remove('hidden');
+            document.getElementById('pm-pause').classList.add('hidden');
+            document.getElementById('pm-status').textContent = 'Paused';
+        }
+
+        function resetPomodoro() {
+            clearInterval(pmInterval);
+            pmRunning = false;
+            pmTime = pmModes[pmMode].time * 60;
+            pmTotal = pmTime;
+            updatePomodoroDisplay();
+            document.getElementById('pm-start').classList.remove('hidden');
+            document.getElementById('pm-pause').classList.add('hidden');
+            document.getElementById('pm-status').textContent = pmModes[pmMode].label;
+        }
+
+        function completePomodoro() {
+            clearInterval(pmInterval);
+            pmRunning = false;
+            
+            if (pmMode === 'work') {
+                pmCompleted++;
+                pmFocusMinutes += 25;
+                pmStreak++;
+                document.getElementById('pm-completed').textContent = pmCompleted;
+                document.getElementById('pm-focus-time').textContent = `${Math.floor(pmFocusMinutes / 60)}h ${pmFocusMinutes % 60}m`;
+                document.getElementById('pm-streak').textContent = pmStreak;
+            } else {
+                pmStreak = 0;
+                document.getElementById('pm-streak').textContent = pmStreak;
+            }
+            
+            document.getElementById('pm-start').classList.remove('hidden');
+            document.getElementById('pm-pause').classList.add('hidden');
+            document.getElementById('pm-status').textContent = 'Completed!';
+            
+            // Auto switch suggestion
+            setTimeout(() => {
+                if (pmMode === 'work') {
+                    setPomodoroMode('short');
+                } else {
+                    setPomodoroMode('work');
+                }
+            }, 2000);
+        }
+
+        // Initialize
+        updateTimerDisplay();
+        updatePomodoroDisplay();
+    </script>
+</body>
+</html>
+

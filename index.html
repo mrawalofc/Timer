@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Valentine's Day</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Background Image Container */
+        .bg-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('57627.png') no-repeat center center;
+            background-size: cover;
+            z-index: 1;
+            animation: zoomIn 10s infinite alternate ease-in-out;
+        }
+
+        /* Sliding Sky Overlay */
+        .sky-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(255,182,193,0.2), transparent, rgba(255,105,180,0.2));
+            z-index: 2;
+            animation: slideSky 20s linear infinite;
+        }
+
+        /* Star Animation */
+        .star {
+            position: absolute;
+            color: gold;
+            font-size: 20px;
+            z-index: 3;
+            pointer-events: none;
+            animation: fall linear forwards;
+        }
+
+        /* Keyframes */
+        @keyframes fall {
+            0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) translateX(50px) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+
+        @keyframes slideSky {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        /* Welcome Message */
+        .content {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        h1 {
+            color: white;
+            text-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+            font-size: 3rem;
+            animation: fadeIn 3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-container"></div>
+    <div class="sky-overlay"></div>
+    
+    <div class="content">
+        <h1>✨ I love you baby ✨</h1>
+    </div>
+
+    <script>
+        function createStar() {
+            const star = document.createElement('div');
+            star.classList.add('star');
+            star.innerHTML = '💕';
+            
+            // Randomize position and speed
+            star.style.left = Math.random() * 100 + 'vw';
+            star.style.animationDuration = Math.random() * 3 + 2 + 's';
+            star.style.opacity = Math.random();
+            
+            document.body.appendChild(star);
+
+            // Remove star after animation ends to save memory
+            setTimeout(() => {
+                star.remove();
+            }, 5000);
+        }
+
+        // Generate stars automatically every 300ms
+        setInterval(createStar, 300);
+    </script>
+    </script>
+    <!-- Audio Player -->
+    <div class="audio-player" style="position: fixed; bottom: 20px; right: 20px; z-index: 100; background: rgba(0, 0, 0, 0.7); padding: 15px; border-radius: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2);">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <span style="color: #ff69b4; font-size: 20px;">🎵 Dhun</span>
+            <span style="color: white; font-size: 14px;">Now Playing</span>
+        </div>
+        <audio id="bgMusic" controls loop style="width: 250px; height: 40px;">
+            <source src="Dhun - (Raag.Fm).mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+        <div style="margin-top: 10px; text-align: center;">
+            <button id="playBtn" onclick="toggleMusic()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; padding: 8px 20px; border-radius: 20px; cursor: pointer; font-size: 14px; transition: all 0.3s;">▶ Play</button>
+        </div>
+    </div>
+
+    <script>
+        // Music Player Controls
+        const audio = document.getElementById('bgMusic');
+        const playBtn = document.getElementById('playBtn');
+        let isPlaying = false;
+
+        function toggleMusic() {
+            if (isPlaying) {
+                audio.pause();
+                playBtn.textContent = '▶ Play';
+                isPlaying = false;
+            } else {
+                audio.play().catch(e => console.log('Audio play failed:', e));
+                playBtn.textContent = '⏸ Pause';
+                isPlaying = true;
+            }
+        }
+
+        // Auto-play on first user interaction
+        document.addEventListener('click', function initAudio() {
+            if (!isPlaying) {
+                audio.play().catch(e => console.log('Auto-play prevented:', e));
+                playBtn.textContent = '⏸ Pause';
+                isPlaying = true;
+            }
+            document.removeEventListener('click', initAudio);
+        }, { once: true });
+
+        // Visit Time Tracker
+        const startTime = new Date();
+        document.getElementById('startTime').textContent = startTime.toLocaleTimeString();
+
+        function updateVisitTime() {
+            const now = new Date();
+            const diff = now - startTime;
+
+            const hours = Math.floor(diff / 3600000);
+            const minutes = Math.floor((diff % 3600000) / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+
+            const formatted = 
+                String(hou
+    
+</body>
+
+</html>
